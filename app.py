@@ -88,7 +88,12 @@ def ask():
     context = data.get("context", "")
 
     # Combine them into a final prompt
-    final_prompt = f"DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n{general_query}\n\n{tools[query] if query in tools else ""}\n\n{donot_hallucinate}\n\nQuestion: {query}"
+    final_prompt = "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n{}\n\n{}\n\n{}\n\nQuestion: {}".format(
+    general_query,
+    tools[query] if query in tools else "",
+    donot_hallucinate,
+    query
+)
 
     try:
         # Generate response from Gemini
