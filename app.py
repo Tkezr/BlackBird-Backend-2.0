@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
 import google.generativeai as genai
 import os
+from flask_cors import CORS
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app, origins=["https://blackbird-lexora.vercel.app"])
 
 general_query = """
 You are a highly advanced legal research assistant designed specifically for practicing lawyers, law firms, and legal researchers. Your role is to provide detailed, accurate, and jurisdiction-specific answers to any legal query, task, or document request. You must always operate with the highest standards of legal reasoning, statutory interpretation, and case law analysis. Your output must reflect the depth and precision of a senior associate or legal counsel from a top-tier law firm. All your responses must be supported by clearly cited *sources*, including:
