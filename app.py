@@ -126,17 +126,7 @@ def process_document():
         if not text_content.strip():
             return jsonify({"error": "No readable text found in PDF"}), 400
 
-        # Build a legal processing prompt
-        final_prompt = (
-            "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
-            f"{general_query}\n\n"
-            f"{tools.get('contract-intelligence', '')}\n\n"
-            f"{donot_hallucinate}\n\n"
-            f"Document Text:\n{text_content[:6000]} "  # limit for token safety
-        )
-
-        response = model.generate_content(final_prompt)
-        return jsonify({"response": response.text})
+        return jsonify({"response": text_content})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
