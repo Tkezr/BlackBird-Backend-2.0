@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import google.generativeai as genai
 import os
 from flask_cors import CORS
+import fitz  # PyMuPDF for PDF text extraction
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -83,26 +84,63 @@ model = genai.GenerativeModel("gemini-2.5-flash")
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
-
-    # Get query, prompt, and context from the request
     query = data.get("query", "")
     prompt = data.get("prompt", "")
     context = data.get("context", "")
 
-    # Combine them into a final prompt
-    final_prompt = "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n{}\n\n{}\n\n{}\n\nQuestion: {}".format(
-    general_query,
-    tools[query] if query in tools else "",
-    donot_hallucinate,
-    query
-)
+    final_prompt = (
+        "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
+        f"{general_query}\n\n"
+        f"{tools[query] if query in tools else ''}\n\n"
+        f"{donot_hallucinate}\n\n"
+        f"Question: {query}"
+    )
 
     try:
-        # Generate response from Gemini
         response = model.generate_content(final_prompt)
         return jsonify({"response": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/process-document", methods=["POST"])
+def process_document():
+    """
+    Endpoint to upload and analyze a PDF document.
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Only PDF files are supported"}), 400
+
+    try:
+        # Read PDF using PyMuPDF
+        doc = fitz.open(stream=file.read(), filetype="pdf")
+        text_content = ""
+        for page in doc:
+            text_content += page.get_text()
+
+        if not text_content.strip():
+            return jsonify({"error": "No readable text found in PDF"}), 400
+
+        # Build a legal processing prompt
+        final_prompt = (
+            "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
+            f"{general_query}\n\n"
+            f"{tools.get('contract-intelligence', '')}\n\n"
+            f"{donot_hallucinate}\n\n"
+            f"Document Text:\n{text_content[:6000]} "  # limit for token safety
+        )
+
+        response = model.generate_content(final_prompt)
+        return jsonify({"response": response.text})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
