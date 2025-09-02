@@ -3,6 +3,8 @@ import google.generativeai as genai
 import os
 from flask_cors import CORS
 import fitz  # PyMuPDF for PDF text extraction
+import requests
+from bs4 import BeautifulSoup
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -88,6 +90,39 @@ def ask():
     prompt = data.get("prompt", "")
     context = data.get("context", "")
     document = data.get("document", "").strip()  # new field
+    if prompt == "courtroom":
+        url = "https://bombayhighcourt.nic.in/displayboard.php"
+        data = {
+            "location": "Bombay",
+            "cnt": 1,
+            "oldtime": "",
+            "newtime": "1756804376"  # can be any number
+        }
+
+        res = requests.post(url, data=data)
+        soup = BeautifulSoup(res.text, "html.parser")
+
+        cards = soup.select("#cardContainer .card")
+        items = []
+        for card in cards:
+            item = [c.get_text(strip=True) for c in card.select(".card-item .value")]
+            items.append(item)
+
+        final_prompt = (
+        "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
+        f"{"This is a chart representing [Cr. No, Sr. No, Case No, Coram, Kept Back Cases] answer the query with the help of this table, if the query does not warrant any relation to this table please mention so in the response"}\n"
+        + str(items) + "\n\n"
+        f"{donot_hallucinate}\n\n"
+        f"Query: {query}\n"
+        )
+        try:
+            response = model.generate_content(final_prompt)
+            return jsonify({"response": response.text})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+        
+
 
     # Handle document
     if document:
@@ -98,7 +133,7 @@ def ask():
     final_prompt = (
         "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
         f"{general_query}\n\n"
-        f"{tools[query] if query in tools else ''}\n\n"
+        f"{tools[prompt] if query in tools else ''}\n\n"
         f"{donot_hallucinate}\n\n"
         f"Question: {query}\n"
         f"{document_text}"
