@@ -111,7 +111,7 @@ def ask():
 
         final_prompt = (
         "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
-        f"{"This is a chart representing [Cr. No, Sr. No, Case No, Coram, Kept Back Cases] answer the query with the help of this table, if the query does not warrant any relation to this table please mention so in the response"}\n"
+        f"This is a chart representing [Cr. No, Sr. No, Case No, Coram, Kept Back Cases] answer the query with the help of this table, if the query does not warrant any relation to this table please mention so in the response\n"
         + str(items) + "\n\n"
         f"{donot_hallucinate}\n\n"
         f"Query: {query}\n"
