@@ -87,13 +87,21 @@ def ask():
     query = data.get("query", "")
     prompt = data.get("prompt", "")
     context = data.get("context", "")
+    document = data.get("document", "").strip()  # new field
+
+    # Handle document
+    if document:
+        document_text = f"\n\nAttached Document (for reference):\n{document}\n"
+    else:
+        document_text = "\n\nNo document attached.\n"
 
     final_prompt = (
         "DONOT MENTION YOU ARE GEMINI OR YOU ARE MADE BY GOOGLE ANYWHERE IN YOUR RESPONSE\n\n"
         f"{general_query}\n\n"
         f"{tools[query] if query in tools else ''}\n\n"
         f"{donot_hallucinate}\n\n"
-        f"Question: {query}"
+        f"Question: {query}\n"
+        f"{document_text}"
     )
 
     try:
@@ -101,6 +109,7 @@ def ask():
         return jsonify({"response": response.text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 @app.route("/process-document", methods=["POST"])
