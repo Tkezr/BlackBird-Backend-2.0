@@ -90,7 +90,8 @@ def ask():
     prompt = data.get("prompt", "")
     context = data.get("context", "")
     document = data.get("document", "").strip()  # new field
-    if prompt == "courtroom":
+
+    if prompt == "courtroom-assistant":
         url = "https://bombayhighcourt.nic.in/displayboard.php"
         data = {
             "location": "Bombay",
